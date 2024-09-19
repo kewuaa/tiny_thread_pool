@@ -1,3 +1,4 @@
+#include <cassert>
 #include <thread>
 
 #include "tiny_thread_pool.hpp"
@@ -31,6 +32,7 @@ TinyThreadPool::~TinyThreadPool() noexcept {
 }
 
 void TinyThreadPool::terminate() noexcept {
+    assert(!terminated && "the loop is already terminated, do not terminate repeatly");
     terminated = true;
     condition_lock.notify_all();
     for (auto& t : threads) {
