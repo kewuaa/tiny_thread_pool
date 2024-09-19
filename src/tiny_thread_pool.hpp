@@ -14,23 +14,23 @@ class SafeTaskDeque {
         std::mutex lock;
         std::deque<T> tasks;
     public:
-        SafeTaskDeque() = default;
+        SafeTaskDeque() noexcept = default;
 
-        SafeTaskDeque(SafeTaskDeque<T>&& other): lock{} {
+        SafeTaskDeque(SafeTaskDeque<T>&& other) noexcept: lock{} {
             tasks = std::move(other.tasks);
         }
 
-        [[nodiscard]] bool empty() {
+        [[nodiscard]] bool empty() noexcept {
             std::lock_guard<std::mutex> guard{lock};
             return tasks.empty();
         }
 
-        [[nodiscard]] size_t size() {
+        [[nodiscard]] size_t size() noexcept {
             std::lock_guard<std::mutex> guard{lock};
             return tasks.size();
         }
 
-        [[nodiscard]] std::optional<T> get() {
+        [[nodiscard]] std::optional<T> get() noexcept {
             std::lock_guard<std::mutex> guard{lock};
             if (tasks.empty()) {
                 return std::nullopt;
@@ -40,7 +40,7 @@ class SafeTaskDeque {
             return task;
         }
 
-        void add(T&& task) {
+        void add(T&& task) noexcept {
             std::lock_guard<std::mutex> guard{lock};
             tasks.push_back(task);
         }
@@ -55,16 +55,16 @@ class TinyThreadPool {
         std::vector<std::thread> threads;
         SafeTaskDeque<std::function<void()>> tasks;
 
-        TinyThreadPool(int max_worker_num);
-        TinyThreadPool(TinyThreadPool&) = delete;
-        TinyThreadPool& operator=(TinyThreadPool&) = delete;
+        TinyThreadPool(int max_worker_num) noexcept;
+        TinyThreadPool(TinyThreadPool&) noexcept = delete;
+        TinyThreadPool& operator=(TinyThreadPool&) noexcept = delete;
     public:
-        ~TinyThreadPool();
-        [[nodiscard]] static TinyThreadPool& init(int max_worker_num);
-        void terminate();
+        ~TinyThreadPool() noexcept;
+        [[nodiscard]] static TinyThreadPool& init(int max_worker_num) noexcept;
+        void terminate() noexcept;
 
         template<typename F, typename ...Args>
-        [[nodiscard]] auto submit(F&& f, Args&&... args) -> std::future<decltype(f(args...))> {
+        [[nodiscard]] auto submit(F&& f, Args&&... args) noexcept -> std::future<decltype(f(args...))> {
             std::function<decltype(f(args...))()> func =
                 std::bind(std::forward<F>(f), std::forward<Args>(args)...);
             auto task = std::make_shared<std::packaged_task<decltype(f(args...))()>>(func);

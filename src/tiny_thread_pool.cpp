@@ -5,7 +5,7 @@
 
 TinyThreadPool::TinyThreadPool(
     int max_worker_num
-): terminated{false}, threads{}, tasks{} {
+) noexcept: terminated{false}, threads{}, tasks{} {
     threads.reserve(max_worker_num);
     for (int i = 0; i < max_worker_num; i++) {
         threads.emplace_back(
@@ -24,13 +24,13 @@ TinyThreadPool::TinyThreadPool(
     }
 }
 
-TinyThreadPool::~TinyThreadPool() {
+TinyThreadPool::~TinyThreadPool() noexcept {
     if (!terminated) {
         terminate();
     }
 }
 
-void TinyThreadPool::terminate() {
+void TinyThreadPool::terminate() noexcept {
     terminated = true;
     condition_lock.notify_all();
     for (auto& t : threads) {
@@ -39,7 +39,7 @@ void TinyThreadPool::terminate() {
     }
 }
 
-TinyThreadPool& TinyThreadPool::init(int max_worker_num) {
+TinyThreadPool& TinyThreadPool::init(int max_worker_num) noexcept {
     static TinyThreadPool pool{max_worker_num};
     return pool;
 }

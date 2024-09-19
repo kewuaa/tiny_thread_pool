@@ -11,6 +11,7 @@ project(
 tiny_thread_pool = static_library(
   'tiny_thread_pool',
   ['src/tiny_thread_pool.cpp'],
+  cpp_args: ['-fno-exceptions']
 )
 
 tiny_thread_pool_dep = declare_dependency(
