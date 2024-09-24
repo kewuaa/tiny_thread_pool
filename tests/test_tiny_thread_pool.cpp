@@ -18,7 +18,7 @@ int test_sum() {
 int main() {
     using namespace std::chrono;
     auto t1 = system_clock::now();
-    auto& pool = TinyThreadPool::init(5);
+    auto pool = TinyThreadPool(5);
     std::vector<std::future<int>> futs;
     for (int i = 0; i < 8; i++) {
         auto fut = pool.submit(test_sum);

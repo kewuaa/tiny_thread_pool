@@ -55,12 +55,11 @@ class TinyThreadPool {
         std::vector<std::thread> threads;
         SafeTaskDeque<std::function<void()>> tasks;
 
-        TinyThreadPool(int max_worker_num) noexcept;
         TinyThreadPool(TinyThreadPool&) noexcept = delete;
         TinyThreadPool& operator=(TinyThreadPool&) noexcept = delete;
     public:
+        TinyThreadPool(int max_worker_num) noexcept;
         ~TinyThreadPool() noexcept;
-        [[nodiscard]] static TinyThreadPool& init(int max_worker_num) noexcept;
         void terminate() noexcept;
 
         template<typename F, typename ...Args>

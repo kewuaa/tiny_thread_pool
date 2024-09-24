@@ -40,8 +40,3 @@ void TinyThreadPool::terminate() noexcept {
             t.join();
     }
 }
-
-TinyThreadPool& TinyThreadPool::init(int max_worker_num) noexcept {
-    static TinyThreadPool pool{max_worker_num};
-    return pool;
-}
