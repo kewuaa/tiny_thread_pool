@@ -61,6 +61,7 @@ class TinyThreadPool {
         TinyThreadPool(int max_worker_num) noexcept;
         ~TinyThreadPool() noexcept;
         void terminate() noexcept;
+        [[nodiscard]] size_t thread_num() const;
 
         template<typename F, typename ...Args>
         [[nodiscard]] auto submit(F&& f, Args&&... args) noexcept -> std::future<decltype(f(args...))> {

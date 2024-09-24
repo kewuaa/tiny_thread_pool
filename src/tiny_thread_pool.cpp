@@ -40,3 +40,7 @@ void TinyThreadPool::terminate() noexcept {
             t.join();
     }
 }
+
+size_t TinyThreadPool::thread_num() const {
+    return threads.size();
+}
