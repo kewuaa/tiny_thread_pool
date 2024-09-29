@@ -24,11 +24,11 @@ int main() {
         auto fut = pool.submit(test_sum);
         futs.push_back(std::move(fut));
     }
+    pool.terminate();
     for (auto& fut : futs) {
         auto s = fut.get();
         std::cout << "sum = " << s << std::endl;
     }
-    pool.terminate();
     auto t2 = system_clock::now();
     auto parallel_time = duration_cast<duration<double>>(t2 - t1);
     std::cout << parallel_time.count() << std::endl;
