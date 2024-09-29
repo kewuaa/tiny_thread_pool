@@ -11,14 +11,17 @@ TinyThreadPool::TinyThreadPool(
     for (int i = 0; i < max_worker_num; i++) {
         threads.emplace_back(
             [this]() {
-                while (!this->terminated) {
+                while (true) {
                     auto task = this->tasks.get();
-                    if (!task) {
+                    if (task) {
+                        (*task)();
+                    } else {
                         std::unique_lock<std::mutex> lock{this->condition_mutex};
+                        if (this->terminated) {
+                            break;
+                        }
                         this->condition_lock.wait(lock);
-                        continue;
                     }
-                    (*task)();
                 }
             }
         );
@@ -33,7 +36,10 @@ TinyThreadPool::~TinyThreadPool() noexcept {
 
 void TinyThreadPool::terminate() noexcept {
     assert(!terminated && "the loop is already terminated, do not terminate repeatly");
-    terminated = true;
+    {
+        std::lock_guard<std::mutex> lock{condition_mutex};
+        terminated = true;
+    }
     condition_lock.notify_all();
     for (auto& t : threads) {
         if (t.joinable())
