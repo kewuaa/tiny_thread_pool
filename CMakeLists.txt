@@ -8,7 +8,11 @@ PROJECT(
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 SET(CMAKE_CXX_STANDARD 17)
 
-ADD_LIBRARY(tiny_thread_pool ${CMAKE_BUILD_TYPE})
+if (NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE Debug)
+endif()
+
+ADD_LIBRARY(tiny_thread_pool)
 TARGET_SOURCES(
     tiny_thread_pool
     PRIVATE "src/tiny_thread_pool.cpp"
