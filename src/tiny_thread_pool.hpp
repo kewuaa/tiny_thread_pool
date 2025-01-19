@@ -47,6 +47,14 @@ class SafeTaskDeque {
 };
 
 
+template<typename T>
+struct to_void {
+    using type = void;
+};
+template<typename T>
+using to_void_t = typename to_void<T>::type;
+
+
 class TinyThreadPool {
     private:
         bool terminated;
@@ -64,10 +72,14 @@ class TinyThreadPool {
         [[nodiscard]] size_t thread_num() const;
 
         template<typename F, typename ...Args>
-        [[nodiscard]] auto submit(F&& f, Args&&... args) noexcept -> std::future<decltype(f(args...))> {
-            std::function<decltype(f(args...))()> func =
-                std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-            auto task = std::make_shared<std::packaged_task<decltype(f(args...))()>>(func);
+        [[nodiscard]] auto submit(F&& f, Args&&... args) noexcept
+        -> std::enable_if_t<
+            std::is_same_v<to_void_t<decltype(f(args...))>, void>,
+            std::future<decltype(f(args...))>
+        > {
+            using result_type = decltype(f(args...));
+            using task_type = std::packaged_task<result_type(Args...)>;
+            auto task = std::make_shared<task_type>(f, std::forward<Args>(args)...);
             tasks.add(
                 [task]() {
                     (*task)();
