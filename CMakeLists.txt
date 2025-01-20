@@ -12,20 +12,21 @@ if (NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Debug)
 endif()
 
-ADD_LIBRARY(tiny_thread_pool)
+ADD_LIBRARY(${PROJECT_NAME})
+SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE true)
 TARGET_SOURCES(
-    tiny_thread_pool
+    ${PROJECT_NAME}
     PRIVATE "src/tiny_thread_pool.cpp"
 )
 TARGET_INCLUDE_DIRECTORIES(
-    tiny_thread_pool
+    ${PROJECT_NAME}
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
         $<INSTALL_INTERFACE:include>
 )
 
 INSTALL(
-    TARGETS tiny_thread_pool
+    TARGETS ${PROJECT_NAME}
     EXPORT TinyThreadPool
     LIBRARY DESTINATION lib
 )
@@ -41,12 +42,12 @@ INSTALL(
 )
 
 if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-    ADD_EXECUTABLE(test_tiny_thread_pool "tests/test_tiny_thread_pool.cpp")
-    TARGET_LINK_LIBRARIES(test_tiny_thread_pool PRIVATE tiny_thread_pool)
+    ADD_EXECUTABLE(test_${PROJECT_NAME} "tests/test_tiny_thread_pool.cpp")
+    TARGET_LINK_LIBRARIES(test_${PROJECT_NAME} PRIVATE ${PROJECT_NAME})
 
     ENABLE_TESTING()
     ADD_TEST(
-        NAME test_tiny_thread_pool
-        COMMAND $<TARGET_FILE:test_tiny_thread_pool>
+        NAME test_${PROJECT_NAME}
+        COMMAND $<TARGET_FILE:test_${PROJECT_NAME}>
     )
 endif()
