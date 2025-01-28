@@ -7,6 +7,8 @@
 #include <mutex>
 #include <optional>
 
+#include "export.hpp"
+
 
 template<typename T>
 class SafeTaskDeque {
@@ -55,7 +57,7 @@ template<typename T>
 using to_void_t = typename to_void<T>::type;
 
 
-class TinyThreadPool {
+class TINY_THREAD_POOL_EXPORT TinyThreadPool {
     private:
         bool terminated;
         std::mutex condition_mutex;
