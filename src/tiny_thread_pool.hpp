@@ -71,7 +71,10 @@ class TinyThreadPool {
         TinyThreadPool(int max_worker_num) noexcept;
         ~TinyThreadPool() noexcept;
         void terminate() noexcept;
-        [[nodiscard]] size_t thread_num() const;
+
+        [[nodiscard]] inline size_t thread_num() const noexcept {
+            return threads.size();
+        }
 
         template<typename F, typename ...Args>
         [[nodiscard]] auto submit(F&& f, Args&&... args) noexcept
