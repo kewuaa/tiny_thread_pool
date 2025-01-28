@@ -62,10 +62,12 @@ class TinyThreadPool {
         std::condition_variable condition_lock;
         std::vector<std::thread> threads;
         SafeTaskDeque<std::function<void()>> tasks;
-
-        TinyThreadPool(TinyThreadPool&) noexcept = delete;
-        TinyThreadPool& operator=(TinyThreadPool&) noexcept = delete;
     public:
+        TinyThreadPool() = delete;
+        TinyThreadPool(TinyThreadPool&) = delete;
+        TinyThreadPool(TinyThreadPool&&) = delete;
+        TinyThreadPool& operator=(TinyThreadPool&) = delete;
+        TinyThreadPool& operator=(TinyThreadPool&&) = delete;
         TinyThreadPool(int max_worker_num) noexcept;
         ~TinyThreadPool() noexcept;
         void terminate() noexcept;
