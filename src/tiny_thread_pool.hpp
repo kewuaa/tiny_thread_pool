@@ -7,7 +7,7 @@
 #include <mutex>
 #include <optional>
 
-#include "export.hpp"
+#include "tiny_thread_pool_export.hpp"
 
 
 template<typename T>
