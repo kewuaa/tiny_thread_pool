@@ -17,7 +17,7 @@ TinyThreadPool::TinyThreadPool(int max_worker_num) noexcept {
                         }
                         this->_condition_lock.wait(lock);
                     }
-                    while (true) {
+                    while (!this->_tasks.empty()) {
                         if (auto task = this->_tasks.get(); task) {
                             (*task)();
                         } else {
