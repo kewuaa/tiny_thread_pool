@@ -19,13 +19,11 @@ public:
         //
     }
 
-    [[nodiscard]] bool empty() noexcept {
-        std::lock_guard<std::mutex> lock { _mtx };
+    [[nodiscard]] inline bool empty() noexcept {
         return _tasks.empty();
     }
 
-    [[nodiscard]] size_t size() noexcept {
-        std::lock_guard<std::mutex> lock { _mtx };
+    [[nodiscard]] inline size_t size() noexcept {
         return _tasks.size();
     }
 
