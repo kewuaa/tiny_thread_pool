@@ -84,15 +84,21 @@ public:
                 (*task)();
             }
         );
-        _condition_lock.notify_one();
+        if (_max_worker_num < 0 || _threads.size() < _max_worker_num) {
+            _new_thread();
+        }
+        _condition.notify_one();
         return task->get_future();
     }
 private:
     bool _terminated { false };
+    int _max_worker_num { -1 };
     std::mutex _condition_mutex {};
-    std::condition_variable _condition_lock {};
+    std::condition_variable _condition {};
     std::vector<std::thread> _threads {};
     SafeTaskDeque<std::function<void()>> _tasks {};
+
+    void _new_thread() noexcept;
 };
 
 #endif
