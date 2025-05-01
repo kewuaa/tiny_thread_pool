@@ -18,7 +18,7 @@ TinyThreadPool::~TinyThreadPool() noexcept {
 void TinyThreadPool::terminate() noexcept {
     assert(!_terminated && "the loop is already terminated, do not terminate repeatly");
     {
-        std::unique_lock<std::mutex> lock { _condition_mutex };
+        std::lock_guard<std::mutex> lock { _condition_mutex };
         _terminated = true;
     }
     _condition.notify_all();
