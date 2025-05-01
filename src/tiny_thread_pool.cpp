@@ -4,10 +4,9 @@
 #include "tiny_thread_pool.hpp"
 
 
-TinyThreadPool::TinyThreadPool(int max_worker_num) noexcept:
-    _max_worker_num(max_worker_num) {
-    _threads.reserve(max_worker_num);
-}
+TinyThreadPool::TinyThreadPool(int max_worker_num, std::chrono::milliseconds timeout) noexcept:
+    _max_worker_num(max_worker_num),
+    _timeout(timeout) {}
 
 TinyThreadPool::~TinyThreadPool() noexcept {
     if (!_terminated) {
@@ -26,27 +25,4 @@ void TinyThreadPool::terminate() noexcept {
         if (t.joinable())
             t.join();
     }
-}
-
-void TinyThreadPool::_new_thread() noexcept {
-    _threads.emplace_back(
-        [this]() {
-            while (true) {
-                {
-                    std::unique_lock<std::mutex> lock { _condition_mutex };
-                    if (_terminated) {
-                        break;
-                    }
-                    _condition.wait(lock);
-                }
-                while (!_tasks.empty()) {
-                    if (auto task = _tasks.get(); task) {
-                        (*task)();
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-    );
 }

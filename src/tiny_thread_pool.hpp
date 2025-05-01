@@ -1,6 +1,7 @@
 #pragma once
 #ifndef _TINY_THREAD_POOL_
 #define _TINY_THREAD_POOL_
+#include <list>
 #include <deque>
 #include <functional>
 #include <future>
@@ -62,12 +63,12 @@ public:
     TinyThreadPool(TinyThreadPool&&) = delete;
     TinyThreadPool& operator=(TinyThreadPool&) = delete;
     TinyThreadPool& operator=(TinyThreadPool&&) = delete;
-    TinyThreadPool(int max_worker_num) noexcept;
+    TinyThreadPool(int max_worker_num, std::chrono::milliseconds timeout = std::chrono::milliseconds()) noexcept;
     ~TinyThreadPool() noexcept;
     void terminate() noexcept;
 
     [[nodiscard]] inline size_t thread_num() const noexcept {
-        return _threads.size();
+        return _threads.size() - _stopped_threads.size();
     }
 
     template<typename F, typename ...Args>
@@ -84,21 +85,70 @@ public:
                 (*task)();
             }
         );
-        if (_max_worker_num < 0 || _threads.size() < _max_worker_num) {
-            _new_thread();
+
+        if (!_stopped_threads.empty()) {
+            for (auto node : _stopped_threads) {
+                if (node->joinable()) {
+                    node->join();
+                }
+                _threads.erase(node);
+            }
+            _stopped_threads.clear();
         }
+
+        if (_max_worker_num < 0 || _threads.size() < _max_worker_num) {
+            if (_timeout.count() > 0) {
+                _new_thread<true>();
+            } else {
+                _new_thread<false>();
+            }
+        }
+
         _condition.notify_one();
+
         return task->get_future();
     }
 private:
+    std::chrono::milliseconds _timeout { 0 };
     bool _terminated { false };
     int _max_worker_num { -1 };
     std::mutex _condition_mutex {};
     std::condition_variable _condition {};
-    std::vector<std::thread> _threads {};
+    std::list<std::thread> _threads {};
+    std::vector<std::list<std::thread>::iterator> _stopped_threads {};
     SafeTaskDeque<std::function<void()>> _tasks {};
 
-    void _new_thread() noexcept;
+    template<bool with_timeout>
+    void _new_thread() noexcept {
+        auto prev = _threads.rbegin();
+        _threads.emplace_back(
+            [this, prev]() {
+                while (true) {
+                    {
+                        std::unique_lock<std::mutex> lock { _condition_mutex };
+                        if (_terminated) {
+                            break;
+                        }
+                        if constexpr (with_timeout) {
+                            if (_condition.wait_for(lock, _timeout) == std::cv_status::timeout) {
+                                _stopped_threads.push_back(prev.base());
+                                return;
+                            }
+                        } else {
+                            _condition.wait(lock);
+                        }
+                    }
+                    while (!_tasks.empty()) {
+                        if (auto task = _tasks.get(); task) {
+                            (*task)();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        );
+    }
 };
 
 #endif
