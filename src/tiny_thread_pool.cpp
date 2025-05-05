@@ -5,8 +5,8 @@
 
 
 TinyThreadPool::TinyThreadPool(int max_worker_num, std::chrono::milliseconds timeout) noexcept:
-    _max_worker_num(max_worker_num),
-    _timeout(timeout) {}
+    _timeout(timeout),
+    _max_worker_num(max_worker_num) {}
 
 TinyThreadPool::~TinyThreadPool() noexcept {
     if (!_terminated) {
