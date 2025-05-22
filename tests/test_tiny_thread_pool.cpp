@@ -21,7 +21,7 @@ int main() {
     auto pool = TinyThreadPool(5);
     std::vector<std::future<int>> futs;
     for (int i = 0; i < 8; i++) {
-        auto fut = pool.submit(test_sum);
+        auto fut = pool.submit(&test_sum);
         futs.push_back(std::move(fut));
     }
     pool.terminate();

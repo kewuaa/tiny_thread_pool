@@ -71,7 +71,9 @@ public:
         using result_type = decltype(std::forward<F>(f)(std::forward<Args>(args)...));
         using task_type = std::packaged_task<result_type()>;
         auto task = std::make_shared<task_type>(
-            std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+            [f = std::forward<F>(f), ...args = std::forward<Args>(args)]() mutable {
+                return std::forward<F>(f)(std::forward<Args>(args)...);
+            }
         );
         _tasks.add(
             [task]() {
