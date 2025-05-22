@@ -64,16 +64,14 @@ public:
     }
 
     template<typename F, typename ...Args>
-    requires requires (F f, Args... args) {
-        { f(args...) };
+    requires requires (F&& f, Args&&... args) {
+        { std::forward<F>(f)(std::forward<Args>(args)...) };
     }
     [[nodiscard]] auto submit(F&& f, Args&&... args) noexcept {
         using result_type = decltype(std::forward<F>(f)(std::forward<Args>(args)...));
         using task_type = std::packaged_task<result_type()>;
         auto task = std::make_shared<task_type>(
-            [&f, &args...] {
-                return std::forward<F>(f)(std::forward<Args>(args)...);
-            }
+            std::bind(std::forward<F>(f), std::forward<Args>(args)...)
         );
         _tasks.add(
             [task]() {
