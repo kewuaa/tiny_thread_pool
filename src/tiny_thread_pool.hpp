@@ -48,14 +48,6 @@ private:
 };
 
 
-template<typename T>
-struct to_void {
-    using type = void;
-};
-template<typename T>
-using to_void_t = typename to_void<T>::type;
-
-
 class TINY_THREAD_POOL_EXPORT TinyThreadPool {
 public:
     TinyThreadPool() = delete;
@@ -72,14 +64,17 @@ public:
     }
 
     template<typename F, typename ...Args>
-    [[nodiscard]] auto submit(F&& f, Args&&... args) noexcept
-    -> std::enable_if_t<
-    std::is_same_v<to_void_t<decltype(f(args...))>, void>,
-    std::future<decltype(f(args...))>
-    > {
-        using result_type = decltype(f(args...));
-        using task_type = std::packaged_task<result_type(Args...)>;
-        auto task = std::make_shared<task_type>(f, std::forward<Args>(args)...);
+    requires requires (F f, Args... args) {
+        { f(args...) };
+    }
+    [[nodiscard]] auto submit(F&& f, Args&&... args) noexcept {
+        using result_type = decltype(std::forward<F>(f)(std::forward<Args>(args)...));
+        using task_type = std::packaged_task<result_type()>;
+        auto task = std::make_shared<task_type>(
+            [&f, &args...] {
+                return std::forward<F>(f)(std::forward<Args>(args)...);
+            }
+        );
         _tasks.add(
             [task]() {
                 (*task)();
