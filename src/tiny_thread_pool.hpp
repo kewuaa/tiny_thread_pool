@@ -96,7 +96,7 @@ public:
             _stopped_threads.clear();
         }
 
-        if (_max_worker_num < 0 || _threads.size() < _max_worker_num) {
+        if (_max_worker_num < 0 || (int)_threads.size() < _max_worker_num) {
             if (_timeout.count() > 0) {
                 _new_thread<true>();
             } else {
