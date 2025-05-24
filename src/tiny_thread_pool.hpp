@@ -96,6 +96,11 @@ public:
             return task->get_future();
         }
 
+        if (_waiting_thread_num.load() > 0) {
+            _condition.notify_one();
+            return task->get_future();
+        }
+
         if (_max_worker_num < 0 || (int)_threads.size() < _max_worker_num) {
             if (_timeout.count() > 0) {
                 _new_thread<true>();
@@ -104,14 +109,13 @@ public:
             }
         }
 
-        _condition.notify_one();
-
         return task->get_future();
     }
 private:
     std::chrono::milliseconds _timeout { 0 };
     bool _terminated { false };
     int _max_worker_num { -1 };
+    std::atomic<size_t> _waiting_thread_num { 0 };
     std::mutex _condition_mutex {};
     std::condition_variable _condition {};
     std::list<std::thread> _threads {};
@@ -136,21 +140,17 @@ private:
                         if (_terminated) {
                             break;
                         }
+                        ++_waiting_thread_num;
                         if constexpr (with_timeout) {
                             if (_condition.wait_for(lock, _timeout) == std::cv_status::timeout) {
                                 _stopped_threads.push_back(prev.base());
+                                --_waiting_thread_num;
                                 return;
                             }
                         } else {
                             _condition.wait(lock);
                         }
-                    }
-                    while (!_tasks.empty()) {
-                        if (auto task = _tasks.get(); task) {
-                            (*task)();
-                        } else {
-                            break;
-                        }
+                        --_waiting_thread_num;
                     }
                 }
             }
