@@ -91,6 +91,11 @@ public:
             _stopped_threads.clear();
         }
 
+        // task maybe already be running
+        if (_tasks.empty()) {
+            return task->get_future();
+        }
+
         if (_max_worker_num < 0 || (int)_threads.size() < _max_worker_num) {
             if (_timeout.count() > 0) {
                 _new_thread<true>();
