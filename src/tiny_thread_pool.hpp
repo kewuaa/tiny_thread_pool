@@ -119,6 +119,13 @@ private:
         _threads.emplace_back(
             [this, prev]() {
                 while (true) {
+                    while (!_tasks.empty()) {
+                        if (auto task = _tasks.get(); task) {
+                            (*task)();
+                        } else {
+                            break;
+                        }
+                    }
                     {
                         std::unique_lock<std::mutex> lock { _condition_mutex };
                         if (_terminated) {
